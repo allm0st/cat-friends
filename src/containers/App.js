@@ -1,21 +1,20 @@
-import React from 'react';
+import React, { Component, Fragment } from 'react';
 import CardList from '../components/CardList';
 import Scroll from '../components/Scroll';
 import SearchBox from '../components/SearchBox';
+import ErrorBoundary from '../components/ErrorBoundary';
 import './App.css';
 
-class App extends React.Component {
+class App extends Component {
   state = {
     users: [],
     searchField: '',
   };
 
   componentDidMount() {
-    setTimeout(() => {
-      fetch('https://jsonplaceholder.typicode.com/users')
-        .then(r => r.json())
-        .then(json => this.setState({ users: json }));
-    }, 3000);
+    fetch('https://jsonplaceholder.typicode.com/users')
+      .then(r => r.json())
+      .then(json => this.setState({ users: json }));
   }
 
   handleSearchChange = e => {
@@ -26,18 +25,18 @@ class App extends React.Component {
     const filteredUsers =
       this.state.users.filter(({ name }) => name.toLowerCase().includes(this.state.searchField));
     return (
-      <div className="tc">
-        {!this.state.users.length
-          ? <h1 className="f1">Loading...</h1>
-          : (
-            <React.Fragment>
-              <h1 className="f1">Cat friends</h1>
-              <SearchBox handleChange={this.handleSearchChange} />
-              <Scroll>
+      <div className="tc" style={{ height: '100vh', width: '100vw' }}>
+        <h1 className="f1">{!this.state.users.length ? 'Loading...' : 'Cat friends'}</h1>
+        {!!this.state.users.length && (
+          <Fragment>
+            <SearchBox handleChange={this.handleSearchChange} />
+            <Scroll>
+              <ErrorBoundary>
                 <CardList users={filteredUsers} />
-              </Scroll>
-            </React.Fragment>
-          )}
+              </ErrorBoundary>
+            </Scroll>
+          </Fragment>
+        )}
       </div>
     );
   };
