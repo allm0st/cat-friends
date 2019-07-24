@@ -1,35 +1,30 @@
 import React, { Component, Fragment } from 'react';
+import { connect } from 'react-redux';
+// import { bindActionCreators } from 'redux';
+import { changeSearchField, getUsers } from '../actions';
 import CardList from '../components/CardList';
+import ErrorBoundary from '../components/ErrorBoundary';
 import Scroll from '../components/Scroll';
 import SearchBox from '../components/SearchBox';
-import ErrorBoundary from '../components/ErrorBoundary';
 import './App.css';
 
 class App extends Component {
-  state = {
-    users: [],
-    searchField: '',
-  };
-
   componentDidMount() {
-    fetch('https://jsonplaceholder.typicode.com/users')
-      .then(r => r.json())
-      .then(json => this.setState({ users: json }));
+    this.props.getUsers();
   }
 
-  handleSearchChange = e => {
-    this.setState({ searchField: e.target.value.toLowerCase() });
-  };
+  render() {
+    const { searchField, handleSearchChange, users, isPending } = this.props;
+    const filteredUsers = users.filter(({ name }) =>
+      name.toLowerCase().includes(searchField.toLowerCase())
+    );
 
-  render = () => {
-    const filteredUsers =
-      this.state.users.filter(({ name }) => name.toLowerCase().includes(this.state.searchField));
     return (
       <div className="tc" style={{ height: '100vh', width: '100vw' }}>
-        <h1 className="f1">{!this.state.users.length ? 'Loading...' : 'Cat friends'}</h1>
-        {!!this.state.users.length && (
+        <h1 className="f1">{isPending ? 'Loading...' : 'Cat friends'}</h1>
+        {!!users.length && (
           <Fragment>
-            <SearchBox handleChange={this.handleSearchChange} />
+            <SearchBox handleChange={handleSearchChange} />
             <Scroll>
               <ErrorBoundary>
                 <CardList users={filteredUsers} />
@@ -39,7 +34,26 @@ class App extends Component {
         )}
       </div>
     );
-  };
-};
+  }
+}
 
-export default App;
+const mapStateToProps = state => ({
+  searchField: state.usersReducer.searchField,
+  isPending: state.requestUsers.isPending,
+  users: state.requestUsers.users,
+});
+
+const mapDispatchToProps = dispatch => ({
+  handleSearchChange: event => dispatch(changeSearchField(event.target.value)),
+  getUsers: () => dispatch(getUsers()),
+});
+
+// const mapDispatchToProps = dispatch => bindActionCreators({
+//   handleSearchChange: event => changeSearchField(event.target.value),
+//   getUsers,
+// }, dispatch);
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(App);
